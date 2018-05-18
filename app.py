@@ -14,7 +14,7 @@ app = dash.Dash('stock-tickers')
 server = app.server
 
 app.scripts.config.serve_locally = False
-dcc._js_dist[0]['external_url'] = 'https://cdn.plot.ly/plotly-finance-1.28.0.min.js'
+#dcc._js_dist[0]['external_url'] = 'https://cdn.plot.ly/plotly-finance-1.28.0.min.js'
 
 colorscale = cl.scales['9']['qual']['Paired']
 
@@ -78,8 +78,8 @@ def update_graph(tickers):
             'type': 'candlestick',
             'name': ticker,
             'legendgroup': ticker,
-            'increasing': {'line': {'color': colorscale[0]}},
-            'decreasing': {'line': {'color': colorscale[1]}}
+            'increasing': {'line': {'color': '#228B22'}},
+            'decreasing': {'line': {'color': '#FF0000'}}
         }
         bb_bands = bbands(df.Close)
         bollinger_traces = [{
