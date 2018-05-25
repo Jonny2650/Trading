@@ -1,0 +1,30 @@
+cols = ['1. open'  ,'2. high'  , '3. low'   ,'4. close' ,'5. volume']
+cs = list(map(lambda x:x[3:],cols))
+#print(cs)
+
+all_trades = pd.DataFrame()
+
+api_key = "LSJQLCCGC6A3RJGC"  #  <-- API key here 
+function = "TIME_SERIES_DAILY"    #   < ---- type of extract we are doing
+for i in Companies[:4]:          # <-- slicing the company list to stop 11k + queries
+    symbol = i                    # < -- i is the comapny name vairalbe from my company list 
+    data = { "function": function,  
+             "symbol": i[4:],      #  < -- slicing i to make it the code required 
+             "apikey": api_key } 
+    page = requests.get(url, params = data)
+    
+    ticker  = page.json()['Meta Data']['2. Symbol']
+    meta = page.json()['Meta Data']
+    #print(ticker,meta)
+    for date in page.json()['Time Series (Daily)']:
+        trades = page.json()['Time Series (Daily)'][date]
+        #pprint(date)
+        #pprint(vals)
+        c = [ trades[i] for i in cols]
+        #print(cols)
+        #print( c)
+        day_of_trades = pd.DataFrame(data = [ticker,date,*c]).transpose()
+        all_trades=all_trades.append(day_of_trades)
+
+
+all_trades = all_trades.rename(columns={i:j for i,j in list(zip(range(len(cs)+2),['ticker','date',*cs]))})     #{0:'ticker',1:'date'})
