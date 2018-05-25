@@ -22,17 +22,12 @@ app.css.append_css({'external_url': 'https://codepen.io/aaron-moss/pen/erXjxa.cs
 app.config['suppress_callback_exceptions']=True 
 
 
-
-image_filename = "./logo.png"
-encoded_image = base64.b64encode(open(image_filename, 'rb').read())
-
 #---------------------------------------------------------------------------------------------------------------------------
 # Read in DATA
 #---------------------------------------------------------------------------------------------------------------------------
-#
 
 df_table = pd.read_pickle('top_movers.pkl')
-df_table = df_table[['symbol','close','5day_price','5day%_change']]
+df_table = df_table[['symbol','name','close','5day_price','5day%_change']]
 df_table = df_table.rename(columns={'symbol':'Ticker','close':'Close','5day_price':'5 Days Predicted','5day%_change':'5 Day % Change'})
 
 df_table['5 Days Predicted'] = df_table['5 Days Predicted'].map('{:,.2f}'.format)  # Formatting float length
@@ -40,16 +35,14 @@ df_table['Close'] = df_table['Close'].map('{:,.3f}'.format)
 df_table['5 Day % Change'] = df_table['5 Day % Change'].map('{:,.2f}'.format)
 
 
-# Change head and tail values to plot more/less on the top movers table
-df_table_top = df_table.tail(8)  # Top Movers
-#print(df_table_top)
-df_table_bot = df_table.head(8)  # Worst Movers
-#print(df_table_bot)
-df_table_top = df_table_top.iloc[::-1]  # Reverses the top movers to put highest first
+df_table_top = df_table.head(8)  # Top Movers
+df_table_bot = df_table.tail(8)  # Worst Movers
+df_table_bot = df_table_bot.iloc[::-1]
+#df_table_top = df_table_top.iloc[::-1]  # Reverses the top movers to put highest first
 
 
 df_clean_prices = pd.read_pickle('clean_prices.pkl')
-ticker_list = df_clean_prices.index.levels[0].unique()
+ticker_list = df_clean_prices.index.levels[0].unique() #+ df_clean_prices.index.levels[0].unique()
 
 ticker_list = ticker_list.tolist()
 timespan_values = [5,7,10,25,50,100,150,365,730,1095,1460]  # Values allowed in the Timespan dropdown
@@ -61,7 +54,7 @@ timespan_values = [5,7,10,25,50,100,150,365,730,1095,1460]  # Values allowed in 
 df_table_2 = df_table.reset_index()
 df_table_3d = df_table_2.drop(columns=['index'])
 
-print(df_table_3d.head())
+
 N = len(df_table_3d['Ticker'])
 print(N)
 x_grid, y_grid, z_grid = np.random.multivariate_normal(np.array([0,0,0]), np.eye(3), N).transpose()
@@ -159,7 +152,7 @@ app.layout = html.Div(style={'backgroundColor': colors['Paper'], 'column-gap': '
           
     html.H1(children='NYSE Trading Algorithm Dashboard',
             style={'font-size':'400%',
-                    'padding': '30px 0px 0px 550px'
+                    'padding': '30px 0px 0px 650px'
 
             }),
     ],
@@ -185,7 +178,7 @@ app.layout = html.Div(style={'backgroundColor': colors['Paper'], 'column-gap': '
                                     options=[{'label': s, 'value': s}
                                             for s in ticker_list],
                                              
-                                    value=['AAPL'],
+                                    value=['Apple'],
                                     multi=True
                                 ),
                                 dcc.Dropdown(
@@ -213,9 +206,9 @@ app.layout = html.Div(style={'backgroundColor': colors['Paper'], 'column-gap': '
             html.Div(
                 className="seven columns",
                 children=html.Div([
-                    dcc.Graph(id='graph_candlestick'),   # Candlestick 
-                    dcc.Graph(id='graph_volume'),   # Volume
-                    dcc.Graph(id='graph_avg')    # Moving Avg
+                    dcc.Graph(id='graph_candlestick', style={'padding':'0px 0px 0px 100px'}),   # Candlestick 
+                    dcc.Graph(id='graph_volume', style={'padding':'0px 0px 0px 100px'}),   # Volume
+                    dcc.Graph(id='graph_avg', style={'padding':'0px 0px 0px 100px'})    # Moving Avg
        
             ])
             ),
@@ -296,9 +289,10 @@ app.layout = html.Div(style={'backgroundColor': colors['Paper'], 'column-gap': '
 def update_stock_details(tickers):
     
     df = df_clean_prices.loc[tickers]
+    print(df.head())
     df = df.reset_index()  
 
-
+    ticker = df['symbol'][-1:]
     name = df['name'][-1:]
     open_val = df['open'][-1:]
     high_val = df['high'][-1:]
@@ -310,8 +304,8 @@ def update_stock_details(tickers):
         #style={'border': '1px solid black'}
         # Header
 
-        
-        [html.Tr([html.Th([str(name.iloc[0][:-34])])])] +
+        [html.Tr([html.Th([str(ticker.iloc[0][:])],style={'textAlign': 'center'})])] +
+        [html.Tr([html.Th([str(name.iloc[0][:])],style={'textAlign': 'center'})])] +
         [html.Tr([html.Td(['Date: ',str(x_val.iloc[0])[:10]],style={'textAlign': 'center'})])] +
         [html.Tr([html.Td(['Open: ',str(open_val.iloc[0])],style={'textAlign': 'center'})])] +
         [html.Tr([html.Td(['High: ',str(high_val.iloc[0])],style={'textAlign': 'center'})])] +
