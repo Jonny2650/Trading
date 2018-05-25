@@ -2,7 +2,6 @@ import dash
 import dash_core_components as dcc
 import dash_html_components as html
 import pickle as pkl
-
 import datetime as dt
 import pandas as pd
 import numpy as np
@@ -14,13 +13,11 @@ import visdcc
 import jgraph as ig
 import json
 import urllib
-#import colorlover
 
 
 app = dash.Dash()
 app.css.append_css({'external_url': 'https://codepen.io/aaron-moss/pen/erXjxa.css'})
 app.config['suppress_callback_exceptions']=True 
-
 
 #---------------------------------------------------------------------------------------------------------------------------
 # Read in DATA
@@ -48,24 +45,20 @@ ticker_list = ticker_list.tolist()
 timespan_values = [5,7,10,25,50,100,150,365,730,1095,1460]  # Values allowed in the Timespan dropdown
 
 #---------------------------------------------------------------------------------------------------------------------------
+# 3D scatter plpt stuff
 #---------------------------------------------------------------------------------------------------------------------------
-
 
 df_table_2 = df_table.reset_index()
 df_table_3d = df_table_2.drop(columns=['index'])
 
-
 N = len(df_table_3d['Ticker'])
+
 print(N)
 x_grid, y_grid, z_grid = np.random.multivariate_normal(np.array([0,0,0]), np.eye(3), N).transpose()
 
-#print(df_table['5 Day % Change'])
-df_3d = pd.DataFrame([df_table_3d['Ticker'], df_table_3d['5 Day % Change'], df_table_3d['Close'], z_grid]).transpose()
-
-#print(df_3d.head())
-df_3d = df_3d.rename(columns={'5 Day % Change':'x_grid','Close':'y_grid','Unnamed 0': 'z_grid'})
-#print(df_3d.tail())
-
+#df_3d = pd.DataFrame([df_table_3d['Ticker'], df_table_3d['5 Day % Change'], df_table_3d['Close'], z_grid]).transpose()
+df_3d = pd.DataFrame([df_table_3d['Ticker'], df_table_3d['5 Day % Change'], y_grid, z_grid]).transpose()
+df_3d = df_3d.rename(columns={'5 Day % Change':'x_grid','Unnamed 0':'y_grid','Unnamed 1': 'z_grid'})
 
 axis=dict(showbackground=False,
           showline=False,
@@ -82,11 +75,10 @@ axis_grid=dict(showbackground=False,
           title=''
           )
 
-
 #---------------------------------------------------------------------------------------------------------------------------
 # Colour palette
 #---------------------------------------------------------------------------------------------------------------------------
-##
+
 colors = {
     'FT Red'         : '#AC526E',
     'FT Light Blue'  : '#73ACBF',
@@ -115,9 +107,8 @@ colors = {
 
 def generate_table(dataframe, max_rows=25):
     return html.Table( 
-        #style={'border': '1px solid black'}
+        
         # Header
-
         [html.Tr([html.Th(col, style={'textAlign': 'center','border':'5px solid #505B6F'}) for col in dataframe.columns])] +
 
         # Body
@@ -134,9 +125,7 @@ def generate_table(dataframe, max_rows=25):
 
 app.layout = html.Div(style={'backgroundColor': colors['Paper'], 'column-gap': '0px','column-rule-style': 'solid'},children=[
     
-    # Page Title
     html.Div([    
-    
     html.Img(
                     src="https://preview.ibb.co/dwLaJ8/logo.png",
                     className='one columns',
@@ -148,22 +137,16 @@ app.layout = html.Div(style={'backgroundColor': colors['Paper'], 'column-gap': '
                         'padding' : '10px 0px 0px 90px'
                     },
                 ),
-
-          
     html.H1(children='NYSE Trading Algorithm Dashboard',
             style={'font-size':'400%',
                     'padding': '30px 0px 0px 650px'
-
             }),
     ],
     className='row'
     ),
-
     html.Div(
         className="row",
         children=[
-            
-            
             html.Div(
                 className="two columns",
                 style={'padding':'30px 0px 0px 20px'},
@@ -177,7 +160,6 @@ app.layout = html.Div(style={'backgroundColor': colors['Paper'], 'column-gap': '
                                     id='stock-ticker-input',
                                     options=[{'label': s, 'value': s}
                                             for s in ticker_list],
-                                             
                                     value=['Apple'],
                                     multi=True
                                 ),
@@ -187,20 +169,15 @@ app.layout = html.Div(style={'backgroundColor': colors['Paper'], 'column-gap': '
                                             for s in timespan_values],
                                     value=['25'],
                                     multi=False
-                                    
-
                                 ),
                                 ],
                                 className='row'
                             ),
-
-                   
                     html.H1(children='Highest predicted price rises', style={'textAlign': 'center','font-size':'170%','padding':'30px 0px 0px 0px'}),
                     generate_table(df_table_top),  # Table of Top Movers
                     
                     html.H1(children='Worst predicted price falls', style={'textAlign': 'center','font-size':'170%','padding':'30px 0px 0px 0px'}),
                     generate_table(df_table_bot)
-                    
             ])               
             ),
             html.Div(
@@ -209,11 +186,8 @@ app.layout = html.Div(style={'backgroundColor': colors['Paper'], 'column-gap': '
                     dcc.Graph(id='graph_candlestick', style={'padding':'0px 0px 0px 100px'}),   # Candlestick 
                     dcc.Graph(id='graph_volume', style={'padding':'0px 0px 0px 100px'}),   # Volume
                     dcc.Graph(id='graph_avg', style={'padding':'0px 0px 0px 100px'})    # Moving Avg
-       
             ])
             ),
-
-
             html.Div(
                 className="three columns",
                 children=html.Div([
@@ -224,16 +198,6 @@ app.layout = html.Div(style={'backgroundColor': colors['Paper'], 'column-gap': '
             ]),
                 style={'padding':'0px 20px 0px 0px'}
             ),
-            
-            # html.Div(
-            #     className="two columns",
-            #     children=html.Div([
-            #         html.H2('Chocolate Hostage')
-            #         #df_info[tickers])
-            # ]),
-                
-            # ),
-            
         ]
     ),
     
@@ -243,12 +207,11 @@ app.layout = html.Div(style={'backgroundColor': colors['Paper'], 'column-gap': '
                                             x=df_3d['x_grid'],
                                             y=df_3d['y_grid'],
                                             z=df_3d['z_grid'],
-                            
                                             mode='lines+markers',
                                             line=dict(
                                                     color=colors['FT Light Grey'], 
                                                     width=0.8),
-                                            text=df_3d['Ticker'] + '  5 Day % Change: ' + df_table_3d['5 Day % Change'] + '  ' + df_table_3d['Close'],
+                                            text=df_3d['Ticker'] + '  5 Day % Change: ' + df_table_3d['5 Day % Change'] + '  CLOSE: ' + df_table_3d['Close'],
                                             hoverinfo='text',
                                             marker=dict(
                                                     size=16,
@@ -256,7 +219,6 @@ app.layout = html.Div(style={'backgroundColor': colors['Paper'], 'column-gap': '
                                                     colorscale='heat',
                                                     opacity=1
                                             ))
-                                          
                                 ],
                                  'layout' : go.Layout(
                                                      width=2400,
@@ -268,18 +230,14 @@ app.layout = html.Div(style={'backgroundColor': colors['Paper'], 'column-gap': '
                                                      xaxis=dict(axis),
                                                      yaxis=dict(axis),
                                                      zaxis=dict(axis),
-
                                                     ),
-
                                                 hovermode='closest')
                                 }
 ),
-
-
 ])
 
 #---------------------------------------------------------------------------------------------------------------------------
-# Plot Graph 1 - CANDLESTICK
+# Generate the Table of Open, High, Low, Close, Ticker and Date
 #---------------------------------------------------------------------------------------------------------------------------
 
 @app.callback(
@@ -301,9 +259,6 @@ def update_stock_details(tickers):
     x_val = df['date'][-1:] 
 
     return html.Table(
-        #style={'border': '1px solid black'}
-        # Header
-
         [html.Tr([html.Th([str(ticker.iloc[0][:])],style={'textAlign': 'center'})])] +
         [html.Tr([html.Th([str(name.iloc[0][:])],style={'textAlign': 'center'})])] +
         [html.Tr([html.Td(['Date: ',str(x_val.iloc[0])[:10]],style={'textAlign': 'center'})])] +
@@ -311,22 +266,11 @@ def update_stock_details(tickers):
         [html.Tr([html.Td(['High: ',str(high_val.iloc[0])],style={'textAlign': 'center'})])] +
         [html.Tr([html.Td(['Low: ',str(low_val.iloc[0])],style={'textAlign': 'center'})])] +
         [html.Tr([html.Td(['Close: ',str(close_val.iloc[0])],style={'textAlign': 'center'})])] 
-
     )
-    
-
-
-    #details = str(name.iloc[0][:-34]) + '  ' + str(x_val.iloc[0])[:10] +
-    #'--------Open:' + str(open_val.iloc[0]) +'
-    #--------High:' + str(high_val.iloc[0]) +'----
-    #----Low:' + str(low_val.iloc[0]) +'--------
-    #Close: ' + str(close_val.iloc[0]) 
-    
-    #return details 
 
 #---------------------------------------------------------------------------------------------------------------------------
+# Plot Graph 1 - CANDLESTICK
 #---------------------------------------------------------------------------------------------------------------------------
-
 
 @app.callback(
     dash.dependencies.Output('graph_candlestick', 'figure'),
@@ -355,8 +299,7 @@ def update_graph_candlestick(tickers,stock_timespan):
          'decreasing' : dict(line=dict(color= colors['FT Claret'],width=5))
 
     }]
-
-        
+    
     return{
         'data': candlestick,
         'layout': {
@@ -491,26 +434,16 @@ def update_graph_volume(tickers,stock_timespan):
     [dash.dependencies.Input('stock-ticker-input', 'value')])
 
 def update_top5bar(tickers):
-     
-    # print(df_table_top['Ticker'][:-5])
-    # print(df_table_top['5 Day % Change'][:-5])
-
 
     trace = [go.Bar(
                 x = df_table_top['Ticker'][:5], 
                 y = df_table_top['5 Day % Change'][:5],
-                #textinfo='none',
-                #textfont=dict(size=20),
-                #textposition='outside',
                 marker = dict(color=[colors['FT Claret'],
                                     colors['Mandarin'],
                                     colors['Slate'],
                                     colors['Oxford'],
                                     colors['FT Light Blue']])
-
-             
             )]
-    
     return{
         'data': trace,        
         'layout': {
@@ -520,11 +453,10 @@ def update_top5bar(tickers):
             'titlefont' : dict(
                             size=25,
                             color=colors['Slate'])}
-
     }
     
 #--------------------------------------------------------------------------------------------------------------------------- 
-# pir chart of top movers
+# pie chart of top movers
 #---------------------------------------------------------------------------------------------------------------------------
 
 @app.callback(
@@ -548,9 +480,7 @@ def update_top5pie(tickers):
                                    colors['Slate'],
                                    colors['Oxford'],
                                    colors['FT Light Blue']]}
-
             )]
-   
     return{
         'data': trace,        
         'layout': {
@@ -560,10 +490,7 @@ def update_top5pie(tickers):
             'titlefont' : dict(
                             size=25,
                             color=colors['Slate'])}
-
     }
-    
-
 
 if __name__ == '__main__':
     app.run_server(debug=True)
